@@ -11,15 +11,16 @@
         <div class="bagua-container">
             <video 
                 id="baguaVideo"
-                x5-playsinline
-                playsinline
-                webkit-playsinline
-                x5-video-player-type="h5"
-                x5-video-orientation="portraint"
+                x5-video-player-type="h5-page"
+                x5-video-player-fullscreen="false"
+                playsinline="true"
+                webkit-playsinline="true"
+                x-webkit-airplay="allow"
                 preload="auto"
                 muted
+                autoplay
                 class="bagua-video">
-                <source src="bagua.mp4" type="video/mp4">
+                <source src="bagua.mp4#t=0.001" type="video/mp4">
             </video>
         </div>
         <div class="result" id="result">
