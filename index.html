@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八卦占卜</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="bagua-container">
+            <video autoplay loop muted playsinline class="bagua-video">
+                <source src="bagua.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="result" id="result" style="display: none;">
+            <h2 id="guaTitle"></h2>
+            <p id="guaDescription"></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
