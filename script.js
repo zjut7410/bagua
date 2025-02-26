@@ -35,11 +35,38 @@ const guaDatabase = [
 
 document.addEventListener('DOMContentLoaded', function() {
     const video = document.querySelector('.bagua-video');
+    const baguaContainer = document.querySelector('.bagua-container');
+    
     if (!video) return;
 
-    video.play().catch(function(error) {
-        console.log("视频播放失败:", error);
+    function playVideo() {
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(function(error) {
+                console.log("视频播放失败，重试中...");
+                setTimeout(playVideo, 1000);
+            });
+        }
+    }
+
+    video.addEventListener('loadeddata', function() {
+        playVideo();
     });
+
+    video.addEventListener('ended', function() {
+        baguaContainer.classList.add('hide');
+        setTimeout(showRandomGua, 1500);
+    });
+
+    video.removeAttribute('loop');
+    
+    video.addEventListener('error', function() {
+        console.error('视频加载失败');
+        showRandomGua();
+    });
+
+    playVideo();
 
     if ('NDEFReader' in window) {
         const reader = new NDEFReader();
@@ -52,13 +79,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
         reader.onreading = () => {
-            showRandomGua();
+            location.reload();
         };
     }
-
-    window.setTimeout(function() {
-        showRandomGua();
-    }, 3000);
 });
 
 function showRandomGua() {
