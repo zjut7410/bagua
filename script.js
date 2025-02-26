@@ -39,16 +39,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!video) return;
 
+    document.addEventListener('touchstart', function() {
+        playVideo();
+    }, { once: true });
+
     function playVideo() {
-        const playPromise = video.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(function(error) {
-                console.log("视频播放失败，重试中...");
-                setTimeout(playVideo, 1000);
-            });
-        }
+        video.play().then(() => {
+            console.log("视频开始播放");
+        }).catch(error => {
+            console.log("视频播放失败，尝试重新播放...");
+            setTimeout(() => {
+                video.muted = true;
+                video.play().catch(e => console.log("重试失败"));
+            }, 100);
+        });
     }
+
+    playVideo();
 
     video.addEventListener('loadeddata', function() {
         playVideo();
@@ -65,8 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('视频加载失败');
         showRandomGua();
     });
-
-    playVideo();
 
     if ('NDEFReader' in window) {
         const reader = new NDEFReader();
