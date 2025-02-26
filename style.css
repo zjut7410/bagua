@@ -30,8 +30,9 @@ html, body {
     width: 100%;
     height: 100%;
     background: #000;
-    transition: opacity 1.5s ease;
+    transition: opacity 1s ease;
     z-index: 2;
+    visibility: visible;
 }
 
 .bagua-video {
@@ -54,7 +55,7 @@ html, body {
     align-items: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 1.5s ease, visibility 0s 1.5s;
+    transition: opacity 1s ease;
     z-index: 1;
 }
 
@@ -109,7 +110,7 @@ html, body {
 .result.show {
     opacity: 1;
     visibility: visible;
-    transition: opacity 1.5s ease;
+    transition: opacity 1s ease, visibility 0s;
 }
 
 .result.show h2,
@@ -118,8 +119,8 @@ html, body {
     transform: translateY(0);
 }
 
-.hide {
-    opacity: 0 !important;
+.bagua-container.hide {
+    opacity: 0;
     visibility: hidden;
-    transition: opacity 1.5s ease, visibility 0s 1.5s;
+    transition: opacity 1s ease, visibility 0s 1s;
 }
