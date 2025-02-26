@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             video.playsInline = true;
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('playsinline', 'true');
+            video.style.display = 'block';
             
             const playPromise = video.play();
             if (playPromise !== undefined) {
@@ -62,11 +63,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         showRandomGua();
                     }, 3000);
                 }).catch(() => {
-                    console.log('使用备用动画');
+                    baguaContainer.classList.add('hide');
+                    showRandomGua();
                 });
             }
         } catch (error) {
-            console.log('使用备用动画');
+            baguaContainer.classList.add('hide');
+            showRandomGua();
         }
     }
 
@@ -83,7 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('error', function() {
-        console.log('使用备用动画');
+        baguaContainer.classList.add('hide');
+        showRandomGua();
     });
 
     if ('NDEFReader' in window) {
