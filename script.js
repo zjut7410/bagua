@@ -39,71 +39,49 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!video) return;
 
-    let transitionTimer = setTimeout(() => {
-        baguaContainer.classList.add('hide');
-        showRandomGua();
-    }, 3000);
+    // 强制等待3秒
+    const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 3000));
 
     async function initVideo() {
         try {
-            await video.load();
+            // 设置视频属性
             video.muted = true;
             video.playsInline = true;
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('playsinline', 'true');
-            video.style.display = 'block';
             
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    clearTimeout(transitionTimer);
-                    setTimeout(() => {
-                        video.pause();
-                        baguaContainer.classList.add('hide');
-                        showRandomGua();
-                    }, 3000);
-                }).catch(() => {
-                    baguaContainer.classList.add('hide');
-                    showRandomGua();
-                });
-            }
+            // 尝试播放视频
+            await video.play();
+            
+            // 等待3秒
+            await waitThreeSeconds();
+            
+            // 显示卦象
+            video.pause();
+            baguaContainer.classList.add('hide');
+            showRandomGua();
         } catch (error) {
+            // 如果视频播放失败，仍等待3秒
+            await waitThreeSeconds();
             baguaContainer.classList.add('hide');
             showRandomGua();
         }
     }
 
+    // 初始化视频
     initVideo();
 
+    // 添加触摸事件支持
     document.addEventListener('touchstart', function() {
         video.play().catch(() => {});
     }, { once: true });
 
-    video.addEventListener('ended', function() {
-        clearTimeout(transitionTimer);
+    // 视频错误处理
+    video.addEventListener('error', async function() {
+        await waitThreeSeconds();
         baguaContainer.classList.add('hide');
         showRandomGua();
     });
-
-    video.addEventListener('error', function() {
-        baguaContainer.classList.add('hide');
-        showRandomGua();
-    });
-
-    if ('NDEFReader' in window) {
-        const reader = new NDEFReader();
-        reader.scan()
-            .then(() => {
-                console.log("NFC扫描已就绪");
-            })
-            .catch(err => {
-                console.log("NFC扫描错误:", err);
-            });
-
-        reader.onreading = () => {
-            location.reload();
-        };
-    }
 });
 
 function showRandomGua() {
