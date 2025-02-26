@@ -2,18 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>八卦占卜</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="bagua-container">
-            <video playsinline muted autoplay class="bagua-video">
+            <video webkit-playsinline playsinline muted autoplay class="bagua-video">
                 <source src="bagua.mp4" type="video/mp4">
             </video>
         </div>
-        <div class="result" id="result" style="display: none;">
+        <div class="result" id="result">
+            <div class="background-overlay"></div>
             <div class="result-content">
                 <h2 id="guaTitle"></h2>
                 <p id="guaDescription"></p>
