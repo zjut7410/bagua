@@ -49,19 +49,25 @@ document.addEventListener('DOMContentLoaded', function() {
             video.playsInline = true;
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('playsinline', 'true');
+            video.setAttribute('x5-video-player-type', 'h5');
+            video.setAttribute('x5-video-player-fullscreen', 'true');
+            
+            // 预加载视频
+            await video.load();
             
             // 尝试播放视频
-            await video.play();
-            
-            // 等待3秒
-            await waitThreeSeconds();
-            
-            // 显示卦象
-            video.pause();
-            baguaContainer.classList.add('hide');
-            showRandomGua();
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                await playPromise;
+                // 等待3秒
+                await waitThreeSeconds();
+                // 显示卦象
+                video.pause();
+                baguaContainer.classList.add('hide');
+                showRandomGua();
+            }
         } catch (error) {
-            // 如果视频播放失败，仍等待3秒
+            console.log('视频播放失败，等待3秒后显示结果');
             await waitThreeSeconds();
             baguaContainer.classList.add('hide');
             showRandomGua();
@@ -71,13 +77,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化视频
     initVideo();
 
-    // 添加触摸事件支持
-    document.addEventListener('touchstart', function() {
+    // 添加触摸和点击事件支持
+    const startVideo = () => {
         video.play().catch(() => {});
-    }, { once: true });
+    };
+
+    document.addEventListener('touchstart', startVideo, { once: true });
+    document.addEventListener('click', startVideo, { once: true });
 
     // 视频错误处理
     video.addEventListener('error', async function() {
+        console.log('视频加载错误，等待3秒后显示结果');
         await waitThreeSeconds();
         baguaContainer.classList.add('hide');
         showRandomGua();
