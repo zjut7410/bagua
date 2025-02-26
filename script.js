@@ -39,37 +39,49 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!video) return;
 
-    document.addEventListener('touchstart', function() {
-        playVideo();
-    }, { once: true });
+    async function initVideo() {
+        try {
+            await video.load();
+            
+            video.muted = true;
+            video.playsInline = true;
+            video.setAttribute('webkit-playsinline', 'true');
+            video.setAttribute('playsinline', 'true');
+            
+            await video.play();
+            
+            video.addEventListener('ended', function() {
+                baguaContainer.classList.add('hide');
+                showRandomGua();
+            });
+            
+        } catch (error) {
+            console.error('视频播放失败，直接显示结果');
+            baguaContainer.classList.add('hide');
+            showRandomGua();
+        }
+    }
 
-    function playVideo() {
-        video.play().then(() => {
-            console.log("视频开始播放");
-        }).catch(error => {
-            console.log("视频播放失败，尝试重新播放...");
-            setTimeout(() => {
-                video.muted = true;
-                video.play().catch(e => console.log("重试失败"));
-            }, 100);
+    function handleUserInteraction() {
+        initVideo().catch(() => {
+            baguaContainer.classList.add('hide');
+            showRandomGua();
         });
     }
 
-    playVideo();
+    document.addEventListener('touchstart', handleUserInteraction, { once: true });
+    document.addEventListener('click', handleUserInteraction, { once: true });
 
-    video.addEventListener('loadeddata', function() {
-        playVideo();
-    });
+    setTimeout(() => {
+        initVideo().catch(() => {
+            baguaContainer.classList.add('hide');
+            showRandomGua();
+        });
+    }, 500);
 
-    video.addEventListener('ended', function() {
-        baguaContainer.classList.add('hide');
-        setTimeout(showRandomGua, 1500);
-    });
-
-    video.removeAttribute('loop');
-    
     video.addEventListener('error', function() {
         console.error('视频加载失败');
+        baguaContainer.classList.add('hide');
         showRandomGua();
     });
 
