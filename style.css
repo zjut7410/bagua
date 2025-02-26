@@ -44,33 +44,20 @@ html, body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 100vw;
-    height: 100vh;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
     background: #000;
 }
 
-@keyframes rotateScale {
-    0% {
-        transform: rotate(0deg) scale(0.8);
-        opacity: 0.3;
+@media screen and (min-width: 768px) {
+    .bagua-video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
-    50% {
-        transform: rotate(180deg) scale(1.2);
-        opacity: 1;
-    }
-    100% {
-        transform: rotate(360deg) scale(0.8);
-        opacity: 0.3;
-    }
-}
-
-.loading-animation {
-    width: 150px;
-    height: 150px;
-    background: url('bagua.mp4') center/contain no-repeat;
-    animation: rotateScale 3s linear;
-    z-index: 3;
 }
 
 .result {
@@ -152,8 +139,4 @@ html, body {
     opacity: 0;
     visibility: hidden;
     transition: opacity 1s ease, visibility 0s 1s;
-}
-
-.bagua-container.hide .loading-animation {
-    display: none;
 }
