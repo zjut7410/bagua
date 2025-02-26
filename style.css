@@ -49,12 +49,14 @@ html, body {
     object-fit: contain;
     background: #000;
     z-index: 1;
+    -webkit-transform: translate(-50%, -50%);
 }
 
-@supports (-webkit-overflow-scrolling: touch) {
-    .bagua-video {
-        position: fixed;
-    }
+.wx .bagua-video {
+    object-position: center;
+    object-fit: contain;
+    width: 100vw;
+    height: 100vh;
 }
 
 .result {
