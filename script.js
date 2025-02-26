@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!video) return;
 
+    let transitionTimer = setTimeout(() => {
+        baguaContainer.classList.add('hide');
+        showRandomGua();
+    }, 3000);
+
     async function initVideo() {
         try {
             await video.load();
@@ -47,30 +52,21 @@ document.addEventListener('DOMContentLoaded', function() {
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('playsinline', 'true');
             
-            video.currentTime = 0;
-            video.duration = 3;
-            
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
-                    console.log('视频开始播放');
+                    clearTimeout(transitionTimer);
                     setTimeout(() => {
                         video.pause();
                         baguaContainer.classList.add('hide');
                         showRandomGua();
                     }, 3000);
                 }).catch(() => {
-                    setTimeout(() => {
-                        baguaContainer.classList.add('hide');
-                        showRandomGua();
-                    }, 3000);
+                    console.log('使用备用动画');
                 });
             }
         } catch (error) {
-            setTimeout(() => {
-                baguaContainer.classList.add('hide');
-                showRandomGua();
-            }, 3000);
+            console.log('使用备用动画');
         }
     }
 
@@ -81,15 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { once: true });
 
     video.addEventListener('ended', function() {
+        clearTimeout(transitionTimer);
         baguaContainer.classList.add('hide');
         showRandomGua();
     });
 
     video.addEventListener('error', function() {
-        setTimeout(() => {
-            baguaContainer.classList.add('hide');
-            showRandomGua();
-        }, 3000);
+        console.log('使用备用动画');
     });
 
     if ('NDEFReader' in window) {
