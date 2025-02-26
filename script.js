@@ -39,74 +39,70 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!video) return;
 
-    // 检测是否是微信浏览器
-    if (/MicroMessenger/i.test(navigator.userAgent)) {
-        document.body.classList.add('wx');
-    }
-
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 3000));
 
-    async function initVideo() {
+    // 检测是否是微信环境
+    const isWechat = /MicroMessenger/i.test(navigator.userAgent);
+
+    async function tryPlayVideo() {
         try {
-            video.muted = true;
-            video.defaultMuted = true;
-            
-            // 强制从开始播放
+            // 确保视频从头开始播放
             video.currentTime = 0;
+            video.muted = true;
             
-            // 尝试立即播放
-            const playPromise = video.play();
+            // 微信环境特殊处理
+            if (isWechat) {
+                document.addEventListener('WeixinJSBridgeReady', function() {
+                    video.play();
+                }, false);
+            }
             
-            if (playPromise !== undefined) {
-                playPromise.then(async () => {
-                    console.log('视频开始播放');
+            // 尝试播放
+            await video.play();
+            console.log('视频开始播放');
+            
+            // 等待3秒后显示结果
+            await waitThreeSeconds();
+            video.pause();
+            baguaContainer.classList.add('hide');
+            showRandomGua();
+        } catch (error) {
+            console.log('自动播放失败，尝试用户触发');
+            // 添加点击播放提示
+            baguaContainer.style.cursor = 'pointer';
+            
+            // 等待用户交互
+            const playHandler = async () => {
+                try {
+                    await video.play();
                     await waitThreeSeconds();
                     video.pause();
                     baguaContainer.classList.add('hide');
                     showRandomGua();
-                }).catch(async (error) => {
-                    console.log('自动播放失败，尝试用户触发播放');
-                    await waitForUserInteraction();
-                });
-            }
-        } catch (error) {
-            console.log('视频播放出错，等待用户交互');
-            await waitForUserInteraction();
+                } catch (e) {
+                    console.log('播放失败，直接显示结果');
+                    baguaContainer.classList.add('hide');
+                    showRandomGua();
+                }
+            };
+
+            // 添加多个事件监听
+            ['touchstart', 'click'].forEach(event => {
+                baguaContainer.addEventListener(event, playHandler, { once: true });
+            });
         }
     }
 
-    async function waitForUserInteraction() {
-        const playVideo = async () => {
-            try {
-                await video.play();
-                await waitThreeSeconds();
-                video.pause();
-                baguaContainer.classList.add('hide');
-                showRandomGua();
-            } catch (error) {
-                console.log('用户触发播放失败，直接显示结果');
-                baguaContainer.classList.add('hide');
-                showRandomGua();
-            }
-        };
-
-        // 监听多种用户交互事件
-        ['touchstart', 'click', 'touchend'].forEach(event => {
-            document.addEventListener(event, playVideo, { once: true });
-        });
-    }
-
-    // 视频加载完成后初始化
-    video.addEventListener('loadedmetadata', initVideo);
-
-    // 如果视频已经加载完成，直接初始化
+    // 视频加载完成后尝试播放
     if (video.readyState >= 2) {
-        initVideo();
+        tryPlayVideo();
+    } else {
+        video.addEventListener('loadeddata', tryPlayVideo);
     }
 
-    // 视频错误处理
-    video.addEventListener('error', async function() {
-        console.log('视频加载错误，等待3秒后显示结果');
+    // 视频加载失败处理
+    video.addEventListener('error', async () => {
+        console.log('视频加载失败，直接显示结果');
         await waitThreeSeconds();
         baguaContainer.classList.add('hide');
         showRandomGua();
