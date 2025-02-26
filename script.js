@@ -42,47 +42,54 @@ document.addEventListener('DOMContentLoaded', function() {
     async function initVideo() {
         try {
             await video.load();
-            
             video.muted = true;
             video.playsInline = true;
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('playsinline', 'true');
             
-            await video.play();
+            video.currentTime = 0;
+            video.duration = 3;
             
-            video.addEventListener('ended', function() {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('视频开始播放');
+                    setTimeout(() => {
+                        video.pause();
+                        baguaContainer.classList.add('hide');
+                        showRandomGua();
+                    }, 3000);
+                }).catch(() => {
+                    setTimeout(() => {
+                        baguaContainer.classList.add('hide');
+                        showRandomGua();
+                    }, 3000);
+                });
+            }
+        } catch (error) {
+            setTimeout(() => {
                 baguaContainer.classList.add('hide');
                 showRandomGua();
-            });
-            
-        } catch (error) {
-            console.error('视频播放失败，直接显示结果');
-            baguaContainer.classList.add('hide');
-            showRandomGua();
+            }, 3000);
         }
     }
 
-    function handleUserInteraction() {
-        initVideo().catch(() => {
-            baguaContainer.classList.add('hide');
-            showRandomGua();
-        });
-    }
+    initVideo();
 
-    document.addEventListener('touchstart', handleUserInteraction, { once: true });
-    document.addEventListener('click', handleUserInteraction, { once: true });
+    document.addEventListener('touchstart', function() {
+        video.play().catch(() => {});
+    }, { once: true });
 
-    setTimeout(() => {
-        initVideo().catch(() => {
-            baguaContainer.classList.add('hide');
-            showRandomGua();
-        });
-    }, 500);
-
-    video.addEventListener('error', function() {
-        console.error('视频加载失败');
+    video.addEventListener('ended', function() {
         baguaContainer.classList.add('hide');
         showRandomGua();
+    });
+
+    video.addEventListener('error', function() {
+        setTimeout(() => {
+            baguaContainer.classList.add('hide');
+            showRandomGua();
+        }, 3000);
     });
 
     if ('NDEFReader' in window) {
