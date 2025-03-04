@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let videoPlayed = false;
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
 
+    // 检测是否是移动设备
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
     async function handleVideoEnd() {
         if (!videoPlayed) {
             videoPlayed = true;
@@ -67,6 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
             video.muted = true;
             video.defaultMuted = true;
             video.playsInline = true;
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('webkit-playsinline', 'true');
             
             // 预加载视频
             await video.load();
@@ -74,17 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
             
-            // 尝试自动播放
-            const playPromise = video.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('视频开始播放');
-                    tapHint.style.display = 'none';
-                }).catch(error => {
-                    console.log('自动播放失败，等待用户交互');
-                    handleUserInteraction();
-                });
+            if (isMobile) {
+                // 移动设备等待用户交互
+                handleUserInteraction();
+            } else {
+                // PC端尝试自动播放
+                tryAutoPlay();
             }
         } catch (error) {
             console.log('视频初始化失败');
@@ -92,10 +92,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function tryAutoPlay() {
+        try {
+            await video.play();
+            tapHint.style.display = 'none';
+        } catch (error) {
+            console.log('自动播放失败，等待用户交互');
+            handleUserInteraction();
+        }
+    }
+
     function handleUserInteraction() {
         tapHint.style.display = 'block';
         
-        const startVideo = async () => {
+        const startVideo = async (event) => {
+            event.preventDefault();
             if (videoPlayed) return;
             
             tapHint.style.display = 'none';
