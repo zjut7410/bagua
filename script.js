@@ -1,112 +1,124 @@
 const guaDatabase = [
     {
         name: "乾卦",
-        description: "乾为天，刚健中正，自强不息。象征着领导者的品格，表示事业兴旺发达，前途光明。"
+        image: "images/gua/qian.png",
+        description: "乾为天，\n刚健中正，自强不息。\n如天行健，君子以自强不息。\n大道在上，光明坦荡，\n万物生发，前程似锦。"
     },
     {
         name: "坤卦",
-        description: "坤为地，包容万物，厚德载物。象征着包容与奉献，意味着务实稳重，循序渐进。"
+        image: "images/gua/kun.png",
+        description: "坤为地，\n厚德载物，包容万象。\n如地势坤，君子以厚德载物。\n大地深厚，滋养万物，\n静待花开，硕果累累。"
     },
     {
         name: "震卦",
-        description: "震为雷，震动警醒。象征着新生与行动，预示着事物将有新的变化和发展。"
+        image: "images/gua/zhen.png",
+        description: "震为雷，\n震动警醒，开启新程。\n如雷震响，君子以恐惧修省。\n春雷激荡，万物复苏，\n变革创新，扶摇直上。"
     },
     {
         name: "巽卦",
-        description: "巽为风，谦逊顺势。象征着谦虚和顺从，暗示着以柔克刚，以智取胜。"
+        image: "images/gua/xun.png",
+        description: "巽为风，\n谦逊顺势，柔中带刚。\n如风行地上，君子以谦逊进德。\n和风细雨，润物无声，\n顺势而为，智慧致胜。"
     },
     {
         name: "坎卦",
-        description: "坎为水，险中有机。象征着困境与机遇，提醒着在危机中也蕴含着转机。"
+        image: "images/gua/kan.png",
+        description: "坎为水，\n险中有机，明哲保身。\n如水流深，君子以行险而顺。\n水性通达，柔韧不屈，\n守正不移，柳暗花明。"
     },
     {
         name: "离卦",
-        description: "离为火，光明文明。象征着智慧与光明，预示着前途光明，智慧增长。"
+        image: "images/gua/li.png",
+        description: "离为火，\n光明睿智，文明永昌。\n如日之升，君子以明德慎行。\n火光通明，照耀四方，\n智慧光明，前途璀璨。"
     },
     {
         name: "艮卦",
-        description: "艮为山，稳重安静。象征着停止与安定，提示需要静心修养，稳扎稳打。"
+        image: "images/gua/gen.png",
+        description: "艮为山，\n稳重安静，止于至善。\n如山之止，君子以思不出位。\n山岳巍峨，静若太古，\n厚积薄发，成就非凡。"
     },
     {
         name: "兑卦",
-        description: "兑为泽，喜悦和顺。象征着愉快与和谐，预示着好运将至，心想事成。"
+        image: "images/gua/dui.png",
+        description: "兑为泽，\n喜悦和顺，润泽万物。\n如泽气浸，君子以朋友讲习。\n秋水盈盈，喜乐安康，\n心想事成，万事亨通。"
     }
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
     const video = document.getElementById('baguaVideo');
     const baguaContainer = document.querySelector('.bagua-container');
+    const tapHint = document.querySelector('.tap-hint');
     
     if (!video) return;
 
-    const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 3000));
+    let videoPlayed = false;
+    const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 检测是否是微信环境
-    const isWechat = /MicroMessenger/i.test(navigator.userAgent);
-
-    async function tryPlayVideo() {
-        try {
-            // 确保视频从头开始播放
-            video.currentTime = 0;
-            video.muted = true;
-            
-            // 微信环境特殊处理
-            if (isWechat) {
-                document.addEventListener('WeixinJSBridgeReady', function() {
-                    video.play();
-                }, false);
-            }
-            
-            // 尝试播放
-            await video.play();
-            console.log('视频开始播放');
-            
-            // 等待3秒后显示结果
-            await waitThreeSeconds();
-            video.pause();
+    async function handleVideoEnd() {
+        if (!videoPlayed) {
+            videoPlayed = true;
             baguaContainer.classList.add('hide');
+            await waitThreeSeconds();
             showRandomGua();
-        } catch (error) {
-            console.log('自动播放失败，尝试用户触发');
-            // 添加点击播放提示
-            baguaContainer.style.cursor = 'pointer';
-            
-            // 等待用户交互
-            const playHandler = async () => {
-                try {
-                    await video.play();
-                    await waitThreeSeconds();
-                    video.pause();
-                    baguaContainer.classList.add('hide');
-                    showRandomGua();
-                } catch (e) {
-                    console.log('播放失败，直接显示结果');
-                    baguaContainer.classList.add('hide');
-                    showRandomGua();
-                }
-            };
-
-            // 添加多个事件监听
-            ['touchstart', 'click'].forEach(event => {
-                baguaContainer.addEventListener(event, playHandler, { once: true });
-            });
         }
     }
 
-    // 视频加载完成后尝试播放
-    if (video.readyState >= 2) {
-        tryPlayVideo();
-    } else {
-        video.addEventListener('loadeddata', tryPlayVideo);
+    async function initVideo() {
+        try {
+            // 重置视频状态
+            video.currentTime = 0;
+            video.muted = true;
+            video.defaultMuted = true;
+            video.playsInline = true;
+            
+            // 预加载视频
+            await video.load();
+            
+            // 监听视频结束
+            video.addEventListener('ended', handleVideoEnd);
+            
+            // 尝试自动播放
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('视频开始播放');
+                    tapHint.style.display = 'none';
+                }).catch(error => {
+                    console.log('自动播放失败，等待用户交互');
+                    handleUserInteraction();
+                });
+            }
+        } catch (error) {
+            console.log('视频初始化失败');
+            handleUserInteraction();
+        }
     }
 
-    // 视频加载失败处理
-    video.addEventListener('error', async () => {
-        console.log('视频加载失败，直接显示结果');
-        await waitThreeSeconds();
-        baguaContainer.classList.add('hide');
-        showRandomGua();
-    });
+    function handleUserInteraction() {
+        tapHint.style.display = 'block';
+        
+        const startVideo = async () => {
+            if (videoPlayed) return;
+            
+            tapHint.style.display = 'none';
+            
+            try {
+                video.currentTime = 0;
+                await video.play();
+            } catch (error) {
+                console.log('用户交互播放失败');
+                handleVideoEnd();
+            }
+        };
+
+        ['touchstart', 'click'].forEach(event => {
+            baguaContainer.addEventListener(event, startVideo, { once: true });
+        });
+    }
+
+    // 初始化视频
+    initVideo();
+
+    // 视频错误处理
+    video.addEventListener('error', handleVideoEnd);
 });
 
 function showRandomGua() {
@@ -114,20 +126,21 @@ function showRandomGua() {
     const selectedGua = guaDatabase[randomIndex];
 
     const result = document.getElementById('result');
-    const guaTitle = document.getElementById('guaTitle');
-    const guaDescription = document.getElementById('guaDescription');
-
-    if (!result || !guaTitle || !guaDescription) {
-        console.error('找不到必要的DOM元素');
-        return;
-    }
-
-    guaTitle.textContent = selectedGua.name;
-    guaDescription.textContent = selectedGua.description;
-
-    result.style.display = 'block';
+    const resultContent = document.querySelector('.result-content');
     
-    requestAnimationFrame(() => {
+    // 清空之前的内容并添加新内容
+    resultContent.innerHTML = `
+        <img src="${selectedGua.image}" alt="${selectedGua.name}" class="gua-image">
+        <h2>${selectedGua.name}</h2>
+        <p>${selectedGua.description.replace(/\n/g, '<br>')}</p>
+    `;
+
+    // 确保元素可见
+    result.style.display = 'flex';
+    result.style.visibility = 'visible';
+    
+    // 使用 setTimeout 确保过渡效果正常显示
+    setTimeout(() => {
         result.classList.add('show');
-    });
+    }, 100);
 }
