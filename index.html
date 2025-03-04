@@ -9,25 +9,27 @@
 <body>
     <div class="container">
         <div class="bagua-container">
-            <video 
-                id="baguaVideo"
-                x5-video-player-type="h5"
-                x5-video-orientation="portraint"
-                x5-playsinline="true"
-                webkit-playsinline="true"
-                playsinline="true"
-                preload="metadata"
-                muted
-                autoplay
-                class="bagua-video">
-                <source src="bagua.mp4" type="video/mp4">
-            </video>
+            <div class="video-wrapper">
+                <video 
+                    id="baguaVideo"
+                    x5-video-player-type="h5"
+                    x5-video-player-fullscreen="false"
+                    x5-playsinline="true"
+                    webkit-playsinline="true"
+                    playsinline="true"
+                    preload="auto"
+                    muted
+                    autoplay
+                    class="bagua-video">
+                    <source src="bagua.mp4#t=0.001" type="video/mp4">
+                </video>
+            </div>
+            <div class="tap-hint">点击开始占卜</div>
         </div>
         <div class="result" id="result">
-            <div class="background-overlay"></div>
+            <div class="mystic-overlay"></div>
             <div class="result-content">
-                <h2 id="guaTitle"></h2>
-                <p id="guaDescription"></p>
+                <!-- 内容将由 JavaScript 动态生成 -->
             </div>
         </div>
     </div>
