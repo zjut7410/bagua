@@ -85,25 +85,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function initVideo() {
         try {
-            // 确保视频加载完成后再继续
-            await new Promise((resolve, reject) => {
-                if (video.readyState >= 2) {
-                    videoLoaded = true;
-                    resolve();
-                } else {
-                    video.addEventListener('loadeddata', () => {
-                        videoLoaded = true;
+            // 确保视频预加载
+            video.load();
+            
+            // 针对移动端的特殊处理
+            if (isMobile || isWechat) {
+                video.preload = 'metadata';  // 移动端先只加载元数据
+                await new Promise((resolve) => {
+                    video.addEventListener('loadedmetadata', resolve, { once: true });
+                    setTimeout(resolve, 3000);  // 3秒超时
+                });
+            } else {
+                // PC端完整加载
+                video.preload = 'auto';
+                await new Promise((resolve) => {
+                    if (video.readyState >= 2) {
                         resolve();
-                    });
-                    video.addEventListener('error', reject);
-                }
-                // 设置较长的超时时间
-                setTimeout(() => {
-                    if (!videoLoaded) {
-                        reject(new Error('视频加载超时'));
+                    } else {
+                        video.addEventListener('loadeddata', resolve, { once: true });
                     }
-                }, 8000);
-            });
+                    setTimeout(resolve, 5000);
+                });
+            }
 
             // 重置视频状态
             video.currentTime = 0;
@@ -119,14 +122,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
             
-            // 移动设备或微信浏览器等待用户交互
+            // 移动端直接显示点击提示
             if (isMobile || isWechat) {
+                loadingOverlay.style.display = 'none';
                 handleUserInteraction();
             } else {
                 await tryAutoPlay();
             }
         } catch (error) {
             console.log('视频初始化失败', error);
+            loadingOverlay.style.display = 'none';
             if (!videoPlayed && !userInteracted) {
                 handleUserInteraction();
             }
@@ -152,9 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userInteracted || videoPlayed) return;
         userInteracted = true;
 
-        if (!videoLoaded) {
-            loadingOverlay.style.display = 'flex';
-        }
         tapHint.style.display = 'block';
         
         const startVideo = async (event) => {
@@ -170,6 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         resolve();
                     } else {
                         video.addEventListener('canplay', resolve, { once: true });
+                        // 移动端超时处理
+                        if (isMobile || isWechat) {
+                            setTimeout(resolve, 3000);
+                        }
                     }
                 });
 
@@ -205,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleUserInteraction();
             }
         }
-    }, 8000);
+    }, 5000);
 
     // 预加载图片
     preloadImages();
@@ -215,6 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 视频错误处理
     video.addEventListener('error', () => {
+        console.log('视频加载出错');
+        loadingOverlay.style.display = 'none';
         if (!videoPlayed) {
             handleVideoEnd();
         }
