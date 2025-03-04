@@ -42,6 +42,7 @@ const guaDatabase = [
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
     const video = document.getElementById('baguaVideo');
     const baguaContainer = document.querySelector('.bagua-container');
     const tapHint = document.querySelector('.tap-hint');
@@ -54,6 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // 检测是否是移动设备
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
+    // 预加载图片
+    function preloadImages() {
+        guaDatabase.forEach(gua => {
+            const img = new Image();
+            img.src = gua.image;
+        });
+    }
+
     async function handleVideoEnd() {
         if (!videoPlayed) {
             videoPlayed = true;
@@ -124,6 +133,21 @@ document.addEventListener('DOMContentLoaded', function() {
             baguaContainer.addEventListener(event, startVideo, { once: true });
         });
     }
+
+    // 视频加载完成后隐藏加载动画
+    video.addEventListener('loadeddata', () => {
+        loadingOverlay.style.display = 'none';
+    });
+
+    // 如果视频加载时间过长，设置超时
+    setTimeout(() => {
+        if (loadingOverlay.style.display !== 'none') {
+            loadingOverlay.style.display = 'none';
+        }
+    }, 5000);
+
+    // 预加载图片
+    preloadImages();
 
     // 初始化视频
     initVideo();
