@@ -52,15 +52,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let videoPlayed = false;
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
 
+    // 检测是否是微信浏览器
+    const isWechat = /MicroMessenger/i.test(navigator.userAgent);
     // 检测是否是移动设备
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
+
     // 预加载图片
     function preloadImages() {
+        const loadedImages = [];
         guaDatabase.forEach(gua => {
             const img = new Image();
+            img.onload = () => console.log(`图片加载成功: ${gua.image}`);
+            img.onerror = () => console.error(`图片加载失败: ${gua.image}`);
             img.src = gua.image;
+            loadedImages.push(img);
         });
+        return loadedImages;
     }
 
     async function handleVideoEnd() {
@@ -81,6 +88,15 @@ document.addEventListener('DOMContentLoaded', function() {
             video.playsInline = true;
             video.setAttribute('playsinline', 'true');
             video.setAttribute('webkit-playsinline', 'true');
+            video.setAttribute('x5-playsinline', 'true');
+            
+            // 针对微信浏览器的特殊处理
+            if (isWechat) {
+                video.setAttribute('x5-video-player-type', 'h5');
+                document.addEventListener("WeixinJSBridgeReady", function () {
+                    video.play();
+                }, false);
+            }
             
             // 预加载视频
             await video.load();
@@ -88,11 +104,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
             
-            if (isMobile) {
-                // 移动设备等待用户交互
+            // 移动设备或微信浏览器等待用户交互
+            if (isMobile || isWechat) {
                 handleUserInteraction();
             } else {
-                // PC端尝试自动播放
                 tryAutoPlay();
             }
         } catch (error) {
@@ -121,6 +136,10 @@ document.addEventListener('DOMContentLoaded', function() {
             tapHint.style.display = 'none';
             
             try {
+                // 确保视频已加载
+                if (video.readyState === 0) {
+                    await video.load();
+                }
                 video.currentTime = 0;
                 await video.play();
             } catch (error) {
@@ -129,7 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        ['touchstart', 'click'].forEach(event => {
+        // 添加多个事件监听以提高响应性
+        ['touchstart', 'click', 'touchend'].forEach(event => {
             baguaContainer.addEventListener(event, startVideo, { once: true });
         });
     }
@@ -165,7 +185,10 @@ function showRandomGua() {
     
     // 清空之前的内容并添加新内容
     resultContent.innerHTML = `
-        <img src="${selectedGua.image}" alt="${selectedGua.name}" class="gua-image">
+        <img src="${selectedGua.image}" 
+            alt="${selectedGua.name}" 
+            class="gua-image"
+            onerror="this.onerror=null; this.src='images/gua/default.png';">
         <h2>${selectedGua.name}</h2>
         <p>${selectedGua.description.replace(/\n/g, '<br>')}</p>
     `;
