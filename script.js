@@ -46,10 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const video = document.getElementById('baguaVideo');
     const baguaContainer = document.querySelector('.bagua-container');
     const tapHint = document.querySelector('.tap-hint');
+    const result = document.getElementById('result');
     
     if (!video) return;
 
     let videoPlayed = false;
+    let videoLoaded = false;
+    let videoStarted = false;
+    let userInteracted = false;
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
 
     // 检测是否是微信浏览器
@@ -81,22 +85,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function initVideo() {
         try {
-            // 设置视频预加载
-            if (!video.src) {
-                video.src = 'bagua.mp4';
-            }
-            video.preload = 'auto';
-            
-            // 开始预加载
-            const preloadPromise = new Promise((resolve, reject) => {
-                video.addEventListener('canplaythrough', resolve, { once: true });
-                video.addEventListener('error', reject, { once: true });
-                setTimeout(resolve, 3000); // 3秒超时
+            // 确保视频加载完成后再继续
+            await new Promise((resolve, reject) => {
+                if (video.readyState >= 2) {
+                    videoLoaded = true;
+                    resolve();
+                } else {
+                    video.addEventListener('loadeddata', () => {
+                        videoLoaded = true;
+                        resolve();
+                    });
+                    video.addEventListener('error', reject);
+                }
+                // 设置较长的超时时间
+                setTimeout(() => {
+                    if (!videoLoaded) {
+                        reject(new Error('视频加载超时'));
+                    }
+                }, 8000);
             });
 
-            // 等待预加载完成或超时
-            await preloadPromise;
-            
             // 重置视频状态
             video.currentTime = 0;
             video.muted = true;
@@ -107,14 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             video.setAttribute('x5-playsinline', 'true');
             video.setAttribute('x5-video-player-type', 'h5');
             video.setAttribute('x5-video-player-fullscreen', 'true');
-            
-            // 针对微信浏览器的特殊处理
-            if (isWechat) {
-                document.addEventListener("WeixinJSBridgeReady", function () {
-                    video.play();
-                }, false);
-            }
-            
+
             // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
             
@@ -122,63 +123,89 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isMobile || isWechat) {
                 handleUserInteraction();
             } else {
-                tryAutoPlay();
+                await tryAutoPlay();
             }
         } catch (error) {
-            console.log('视频初始化失败');
-            handleUserInteraction();
+            console.log('视频初始化失败', error);
+            if (!videoPlayed && !userInteracted) {
+                handleUserInteraction();
+            }
         }
     }
 
     async function tryAutoPlay() {
         try {
-            await video.play();
-            tapHint.style.display = 'none';
+            if (!videoStarted && !videoPlayed) {
+                videoStarted = true;
+                await video.play();
+                tapHint.style.display = 'none';
+            }
         } catch (error) {
             console.log('自动播放失败，等待用户交互');
-            handleUserInteraction();
+            if (!userInteracted) {
+                handleUserInteraction();
+            }
         }
     }
 
     function handleUserInteraction() {
+        if (userInteracted || videoPlayed) return;
+        userInteracted = true;
+
+        if (!videoLoaded) {
+            loadingOverlay.style.display = 'flex';
+        }
         tapHint.style.display = 'block';
         
         const startVideo = async (event) => {
             event.preventDefault();
-            if (videoPlayed) return;
+            if (videoPlayed || videoStarted) return;
             
             tapHint.style.display = 'none';
             
             try {
-                // 确保视频已加载
-                if (video.readyState === 0) {
-                    await video.load();
+                // 确保视频已加载并准备就绪
+                await new Promise((resolve) => {
+                    if (video.readyState >= 2) {
+                        resolve();
+                    } else {
+                        video.addEventListener('canplay', resolve, { once: true });
+                    }
+                });
+
+                if (!videoStarted && !videoPlayed) {
+                    videoStarted = true;
+                    video.currentTime = 0;
+                    await video.play();
                 }
-                video.currentTime = 0;
-                await video.play();
             } catch (error) {
-                console.log('用户交互播放失败');
-                handleVideoEnd();
+                console.log('播放失败', error);
+                if (!videoPlayed) {
+                    handleVideoEnd();
+                }
             }
         };
 
-        // 添加多个事件监听以提高响应性
-        ['touchstart', 'click', 'touchend'].forEach(event => {
+        ['touchstart', 'click'].forEach(event => {
             baguaContainer.addEventListener(event, startVideo, { once: true });
         });
     }
 
     // 视频加载完成后隐藏加载动画
     video.addEventListener('loadeddata', () => {
+        videoLoaded = true;
         loadingOverlay.style.display = 'none';
     });
 
     // 如果视频加载时间过长，设置超时
     setTimeout(() => {
-        if (loadingOverlay.style.display !== 'none') {
+        if (!videoLoaded && loadingOverlay.style.display !== 'none') {
             loadingOverlay.style.display = 'none';
+            if (!userInteracted && !videoPlayed) {
+                handleUserInteraction();
+            }
         }
-    }, 5000);
+    }, 8000);
 
     // 预加载图片
     preloadImages();
@@ -187,7 +214,16 @@ document.addEventListener('DOMContentLoaded', function() {
     initVideo();
 
     // 视频错误处理
-    video.addEventListener('error', handleVideoEnd);
+    video.addEventListener('error', () => {
+        if (!videoPlayed) {
+            handleVideoEnd();
+        }
+    });
+
+    // 防止页面刷新时出现问题
+    window.addEventListener('beforeunload', () => {
+        video.pause();
+    });
 });
 
 function showRandomGua() {
