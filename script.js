@@ -56,12 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let userInteracted = false;
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 检测是否是微信浏览器
     const isWechat = /MicroMessenger/i.test(navigator.userAgent);
-    // 检测是否是移动设备
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    // 预加载图片
     function preloadImages() {
         const loadedImages = [];
         guaDatabase.forEach(gua => {
@@ -85,44 +82,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function initVideo() {
         try {
-            // 确保视频预加载
-            video.load();
-            
-            // 针对移动端的特殊处理
+            if (!video.src) {
+                video.src = 'bagua.mp4';
+            }
+
             if (isMobile || isWechat) {
-                video.preload = 'metadata';  // 移动端先只加载元数据
+                video.load();
                 await new Promise((resolve) => {
-                    video.addEventListener('loadedmetadata', resolve, { once: true });
-                    setTimeout(resolve, 3000);  // 3秒超时
-                });
-            } else {
-                // PC端完整加载
-                video.preload = 'auto';
-                await new Promise((resolve) => {
-                    if (video.readyState >= 2) {
-                        resolve();
-                    } else {
-                        video.addEventListener('loadeddata', resolve, { once: true });
-                    }
-                    setTimeout(resolve, 5000);
+                    const loadCheck = () => {
+                        if (video.readyState >= 2) {
+                            resolve();
+                        } else {
+                            requestAnimationFrame(loadCheck);
+                        }
+                    };
+                    loadCheck();
+                    setTimeout(resolve, 3000);
                 });
             }
 
-            // 重置视频状态
             video.currentTime = 0;
             video.muted = true;
             video.defaultMuted = true;
             video.playsInline = true;
-            video.setAttribute('playsinline', 'true');
-            video.setAttribute('webkit-playsinline', 'true');
-            video.setAttribute('x5-playsinline', 'true');
-            video.setAttribute('x5-video-player-type', 'h5');
-            video.setAttribute('x5-video-player-fullscreen', 'true');
 
-            // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
-            
-            // 移动端直接显示点击提示
+
             if (isMobile || isWechat) {
                 loadingOverlay.style.display = 'none';
                 handleUserInteraction();
@@ -132,9 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.log('视频初始化失败', error);
             loadingOverlay.style.display = 'none';
-            if (!videoPlayed && !userInteracted) {
-                handleUserInteraction();
-            }
+            handleUserInteraction();
         }
     }
 
@@ -147,9 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.log('自动播放失败，等待用户交互');
-            if (!userInteracted) {
-                handleUserInteraction();
-            }
+            handleUserInteraction();
         }
     }
 
@@ -161,49 +142,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const startVideo = async (event) => {
             event.preventDefault();
+            event.stopPropagation();
+            
             if (videoPlayed || videoStarted) return;
             
             tapHint.style.display = 'none';
             
             try {
-                // 确保视频已加载并准备就绪
-                await new Promise((resolve) => {
-                    if (video.readyState >= 2) {
-                        resolve();
-                    } else {
-                        video.addEventListener('canplay', resolve, { once: true });
-                        // 移动端超时处理
-                        if (isMobile || isWechat) {
-                            setTimeout(resolve, 3000);
-                        }
-                    }
-                });
-
-                if (!videoStarted && !videoPlayed) {
-                    videoStarted = true;
-                    video.currentTime = 0;
-                    await video.play();
-                }
+                video.load();
+                await video.play();
+                videoStarted = true;
             } catch (error) {
                 console.log('播放失败', error);
-                if (!videoPlayed) {
-                    handleVideoEnd();
-                }
+                handleVideoEnd();
             }
         };
 
         ['touchstart', 'click'].forEach(event => {
-            baguaContainer.addEventListener(event, startVideo, { once: true });
+            baguaContainer.addEventListener(event, startVideo, { 
+                once: true,
+                capture: true,
+                passive: false
+            });
         });
     }
 
-    // 视频加载完成后隐藏加载动画
     video.addEventListener('loadeddata', () => {
         videoLoaded = true;
         loadingOverlay.style.display = 'none';
     });
 
-    // 如果视频加载时间过长，设置超时
     setTimeout(() => {
         if (!videoLoaded && loadingOverlay.style.display !== 'none') {
             loadingOverlay.style.display = 'none';
@@ -213,13 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 5000);
 
-    // 预加载图片
     preloadImages();
-
-    // 初始化视频
     initVideo();
 
-    // 视频错误处理
     video.addEventListener('error', () => {
         console.log('视频加载出错');
         loadingOverlay.style.display = 'none';
@@ -228,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 防止页面刷新时出现问题
     window.addEventListener('beforeunload', () => {
         video.pause();
     });
@@ -241,7 +204,6 @@ function showRandomGua() {
     const result = document.getElementById('result');
     const resultContent = document.querySelector('.result-content');
     
-    // 清空之前的内容并添加新内容
     resultContent.innerHTML = `
         <img src="${selectedGua.image}" 
             alt="${selectedGua.name}" 
@@ -251,11 +213,9 @@ function showRandomGua() {
         <p>${selectedGua.description.replace(/\n/g, '<br>')}</p>
     `;
 
-    // 确保元素可见
     result.style.display = 'flex';
     result.style.visibility = 'visible';
     
-    // 使用 setTimeout 确保过渡效果正常显示
     setTimeout(() => {
         result.classList.add('show');
     }, 100);
