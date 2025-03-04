@@ -81,6 +81,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function initVideo() {
         try {
+            // 设置视频预加载
+            if (!video.src) {
+                video.src = 'bagua.mp4';
+            }
+            video.preload = 'auto';
+            
+            // 开始预加载
+            const preloadPromise = new Promise((resolve, reject) => {
+                video.addEventListener('canplaythrough', resolve, { once: true });
+                video.addEventListener('error', reject, { once: true });
+                setTimeout(resolve, 3000); // 3秒超时
+            });
+
+            // 等待预加载完成或超时
+            await preloadPromise;
+            
             // 重置视频状态
             video.currentTime = 0;
             video.muted = true;
@@ -89,17 +105,15 @@ document.addEventListener('DOMContentLoaded', function() {
             video.setAttribute('playsinline', 'true');
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('x5-playsinline', 'true');
+            video.setAttribute('x5-video-player-type', 'h5');
+            video.setAttribute('x5-video-player-fullscreen', 'true');
             
             // 针对微信浏览器的特殊处理
             if (isWechat) {
-                video.setAttribute('x5-video-player-type', 'h5');
                 document.addEventListener("WeixinJSBridgeReady", function () {
                     video.play();
                 }, false);
             }
-            
-            // 预加载视频
-            await video.load();
             
             // 监听视频结束
             video.addEventListener('ended', handleVideoEnd);
