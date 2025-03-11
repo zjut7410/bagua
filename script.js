@@ -51,24 +51,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!video) return;
 
     let videoPlayed = false;
-    let videoLoaded = false;
-    let videoStarted = false;
-    let userInteracted = false;
     const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 3000));
 
     const isWechat = /MicroMessenger/i.test(navigator.userAgent);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     function preloadImages() {
-        const loadedImages = [];
         guaDatabase.forEach(gua => {
             const img = new Image();
             img.onload = () => console.log(`图片加载成功: ${gua.image}`);
             img.onerror = () => console.error(`图片加载失败: ${gua.image}`);
             img.src = gua.image;
-            loadedImages.push(img);
         });
-        return loadedImages;
     }
 
     async function handleVideoEnd() {
@@ -97,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             video.currentTime = 0;
             video.muted = true;
-            video.defaultMuted = true;
             video.playsInline = true;
             video.setAttribute('playsinline', 'true');
             video.setAttribute('webkit-playsinline', 'true');
@@ -119,11 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function tryAutoPlay() {
         try {
-            if (!videoStarted && !videoPlayed) {
-                videoStarted = true;
-                await video.play();
-                tapHint.style.display = 'none';
-            }
+            await video.play();
+            tapHint.style.display = 'none';
         } catch (error) {
             console.log('自动播放失败，等待用户交互');
             handleUserInteraction();
@@ -131,16 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleUserInteraction() {
-        if (userInteracted || videoPlayed) return;
-        userInteracted = true;
-
         tapHint.style.display = 'block';
 
         const startVideo = async (event) => {
             event.preventDefault();
             event.stopPropagation();
 
-            if (videoPlayed || videoStarted) return;
+            if (videoPlayed) return;
 
             tapHint.style.display = 'none';
 
@@ -153,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 await video.play();
-                videoStarted = true;
             } catch (error) {
                 console.log('播放失败', error);
                 handleVideoEnd();
@@ -170,14 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     video.addEventListener('loadeddata', () => {
-        videoLoaded = true;
         loadingOverlay.style.display = 'none';
     });
 
     setTimeout(() => {
-        if (!videoLoaded && loadingOverlay.style.display !== 'none') {
+        if (loadingOverlay.style.display !== 'none') {
             loadingOverlay.style.display = 'none';
-            if (!userInteracted && !videoPlayed) {
+            if (!videoPlayed) {
                 handleUserInteraction();
             }
         }
