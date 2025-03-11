@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const baguaContainer = document.querySelector('.bagua-container');
     const tapHint = document.querySelector('.tap-hint');
     const result = document.getElementById('result');
-    
+
     if (!video) return;
 
     let videoPlayed = false;
     let videoLoaded = false;
     let videoStarted = false;
     let userInteracted = false;
-    const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 1000));
+    const waitThreeSeconds = () => new Promise(resolve => setTimeout(resolve, 3000));
 
     const isWechat = /MicroMessenger/i.test(navigator.userAgent);
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -135,15 +135,15 @@ document.addEventListener('DOMContentLoaded', function() {
         userInteracted = true;
 
         tapHint.style.display = 'block';
-        
+
         const startVideo = async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            
+
             if (videoPlayed || videoStarted) return;
-            
+
             tapHint.style.display = 'none';
-            
+
             try {
                 video.load();
                 if (video.readyState < 2) {
@@ -203,9 +203,8 @@ function showRandomGua() {
     const randomIndex = Math.floor(Math.random() * guaDatabase.length);
     const selectedGua = guaDatabase[randomIndex];
 
-    const result = document.getElementById('result');
     const resultContent = document.querySelector('.result-content');
-    
+
     resultContent.innerHTML = `
         <img src="${selectedGua.image}" 
             alt="${selectedGua.name}" 
@@ -215,9 +214,10 @@ function showRandomGua() {
         <p>${selectedGua.description.replace(/\n/g, '<br>')}</p>
     `;
 
+    const result = document.getElementById('result');
     result.style.display = 'flex';
     result.style.visibility = 'visible';
-    
+
     setTimeout(() => {
         result.classList.add('show');
     }, 100);
