@@ -92,16 +92,18 @@ html, body {
     object-fit: contain;
     background: #000;
     z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 @media screen and (max-width: 768px) {
-    .bagua-video {
+    .video-wrapper {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
         width: 100%;
         height: 100%;
+        overflow: hidden;
     }
 }
 
@@ -146,6 +148,20 @@ html, body {
     background-size: contain;
     background-repeat: no-repeat;
     background-color: #f5e6d3;
+}
+
+@media screen and (max-width: 768px) {
+    .result {
+        background-size: 100% 100%;
+        background-position: center center;
+        background-attachment: fixed;
+    }
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .result {
+        background-size: auto 100%;
+    }
 }
 
 .result.show {
@@ -213,18 +229,6 @@ html, body {
 .result.show p {
     opacity: 1;
     transform: translateY(0);
-}
-
-@media screen and (max-width: 768px) {
-    .result {
-        background-size: contain;
-    }
-}
-
-@media screen and (orientation: landscape) {
-    .result {
-        background-size: contain;
-    }
 }
 
 .bagua-container.hide {
