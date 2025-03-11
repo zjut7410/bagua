@@ -20,14 +20,14 @@
                     playsinline=""
                     webkit-playsinline=""
                     preload="auto"
-                    muted
+                    autoplay muted  <!-- 添加autoplay和muted属性 -->
                     class="bagua-video"
                     poster="images/poster.jpg">
                     <source src="bagua.mp4" type="video/mp4">
                     您的浏览器不支持 video 标签。
                 </video>
             </div>
-            <div class="tap-hint">点击开始占卜</div>
+            <!-- 移除了点击提示，因为视频现在是自动播放的 -->
         </div>
         <div class="result" id="result">
             <div class="result-content">
@@ -35,6 +35,24 @@
             </div>
         </div>
     </div>
+    <script>
+        // 在这里添加JavaScript代码来处理可能的自动播放失败的情况
+        document.addEventListener("DOMContentLoaded", function() {
+            const video = document.getElementById('baguaVideo');
+            try {
+                video.play();
+            } catch (err) {
+                console.log("自动播放失败，可能是由于浏览器或设备设置限制。");
+                // 如果你想在自动播放失败时显示一个按钮让用户手动播放，可以取消注释以下代码：
+                /*
+                const playButton = document.createElement('button');
+                playButton.innerText = '点击播放';
+                playButton.onclick = () => video.play();
+                document.body.appendChild(playButton);
+                */
+            }
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
