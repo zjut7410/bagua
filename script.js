@@ -89,15 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isMobile || isWechat) {
                 video.load();
                 await new Promise((resolve) => {
-                    const loadCheck = () => {
-                        if (video.readyState >= 2) {
-                            resolve();
-                        } else {
-                            requestAnimationFrame(loadCheck);
-                        }
-                    };
-                    loadCheck();
-                    setTimeout(resolve, 3000);
+                    video.addEventListener('loadedmetadata', resolve, { once: true });
+                    video.addEventListener('loadeddata', resolve, { once: true });
+                    setTimeout(resolve, 5000);
                 });
             }
 
@@ -105,6 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
             video.muted = true;
             video.defaultMuted = true;
             video.playsInline = true;
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('webkit-playsinline', 'true');
 
             video.addEventListener('ended', handleVideoEnd);
 
@@ -150,6 +146,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             try {
                 video.load();
+                if (video.readyState < 2) {
+                    await new Promise((resolve) => {
+                        video.addEventListener('loadeddata', resolve, { once: true });
+                        setTimeout(resolve, 3000);
+                    });
+                }
                 await video.play();
                 videoStarted = true;
             } catch (error) {
